@@ -23,7 +23,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Calculate
 import androidx.compose.material.icons.filled.FileDownload
 import androidx.compose.material.icons.filled.Info
-import androidx.compose.material.icons.filled.Share
+import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.filled.Vibration
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -54,6 +54,7 @@ import androidx.compose.ui.unit.sp
 import com.example.RobinPayViewModel
 import com.example.data.SalaryConfig
 import com.example.data.SessionEntity
+import com.example.model.AppLanguage
 import com.example.ui.theme.Emerald400
 import com.example.ui.theme.Slate700
 import com.example.ui.theme.Slate800
@@ -71,6 +72,9 @@ fun SettingsScreen(
     sessions: List<SessionEntity>
 ) {
     val context = LocalContext.current
+    val isDe = salaryConfig.language == AppLanguage.GERMAN
+    val curr = salaryConfig.currencySymbol
+
     var grossInput by remember(salaryConfig.monthlyGrossSalary) {
         mutableStateOf(salaryConfig.monthlyGrossSalary.toInt().toString())
     }
@@ -90,16 +94,115 @@ fun SettingsScreen(
         // Header
         Column(modifier = Modifier.padding(vertical = 4.dp)) {
             Text(
-                text = "Gehaltsrechner & Parameter ⚙️",
+                text = if (isDe) "Gehaltsrechner & Einstellungen ⚙️" else "Salary Calculator & Settings ⚙️",
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Black,
                 color = MaterialTheme.colorScheme.onBackground
             )
             Text(
-                text = "Berechnungsbasis für sekundengenaue Auszeiten",
+                text = if (isDe) "Berechnungsbasis für sekundengenaue Auszeiten" else "Parameters for real-time compensation tracking",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
+        }
+
+        // Language & Currency Selector Card
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            colors = CardDefaults.cardColors(containerColor = Slate900),
+            shape = RoundedCornerShape(20.dp),
+            border = androidx.compose.foundation.BorderStroke(1.dp, Slate800)
+        ) {
+            Column(modifier = Modifier.padding(16.dp)) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(imageVector = Icons.Default.Language, contentDescription = null, tint = Emerald400, modifier = Modifier.size(20.dp))
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = if (isDe) "Sprache & Währung" else "Language & Currency",
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 15.sp,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                // Language Buttons
+                Text(
+                    text = if (isDe) "App-Sprache (Standard: Englisch):" else "App Language (Default: English):",
+                    fontSize = 11.sp,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Spacer(modifier = Modifier.height(6.dp))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    AppLanguage.entries.forEach { lang ->
+                        val isSelected = salaryConfig.language == lang
+                        Box(
+                            modifier = Modifier
+                                .weight(1f)
+                                .clip(RoundedCornerShape(10.dp))
+                                .background(if (isSelected) Emerald400.copy(alpha = 0.2f) else Slate800)
+                                .border(
+                                    if (isSelected) 1.5.dp else 1.dp,
+                                    if (isSelected) Emerald400 else Slate700,
+                                    RoundedCornerShape(10.dp)
+                                )
+                                .clickable { viewModel.setLanguage(lang) }
+                                .padding(vertical = 10.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = "${lang.flag} ${lang.displayName}",
+                                fontSize = 13.sp,
+                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                                color = if (isSelected) Emerald400 else MaterialTheme.colorScheme.onSurface
+                            )
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(14.dp))
+
+                // Currency Symbols
+                Text(
+                    text = if (isDe) "Währungssymbol:" else "Currency Symbol:",
+                    fontSize = 11.sp,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Spacer(modifier = Modifier.height(6.dp))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    listOf("€" to "Euro (€)", "$" to "Dollar ($)", "£" to "Pound (£)").forEach { (symbol, label) ->
+                        val isSelected = salaryConfig.currencySymbol == symbol
+                        Box(
+                            modifier = Modifier
+                                .weight(1f)
+                                .clip(RoundedCornerShape(10.dp))
+                                .background(if (isSelected) Emerald400.copy(alpha = 0.2f) else Slate800)
+                                .border(
+                                    if (isSelected) 1.5.dp else 1.dp,
+                                    if (isSelected) Emerald400 else Slate700,
+                                    RoundedCornerShape(10.dp)
+                                )
+                                .clickable { viewModel.setCurrency(symbol) }
+                                .padding(vertical = 8.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = label,
+                                fontSize = 12.sp,
+                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                                color = if (isSelected) Emerald400 else MaterialTheme.colorScheme.onSurface
+                            )
+                        }
+                    }
+                }
+            }
         }
 
         // Salary Form Card
@@ -111,7 +214,7 @@ fun SettingsScreen(
         ) {
             Column(modifier = Modifier.padding(16.dp)) {
                 Text(
-                    text = "Arbeitsvertrags-Daten",
+                    text = if (isDe) "Arbeitsvertrags-Daten" else "Employment Contract Details",
                     fontWeight = FontWeight.Bold,
                     fontSize = 15.sp,
                     color = MaterialTheme.colorScheme.onSurface
@@ -125,13 +228,13 @@ fun SettingsScreen(
                         grossInput = it
                         saveMessage = null
                     },
-                    label = { Text("Monatliches Bruttogehalt (€)") },
+                    label = { Text(if (isDe) "Monatliches Bruttogehalt ($curr)" else "Monthly Gross Salary ($curr)") },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     modifier = Modifier
                         .fillMaxWidth()
                         .testTag("salary_input"),
                     shape = RoundedCornerShape(12.dp),
-                    trailingIcon = { Text("€  ", fontWeight = FontWeight.Bold, color = Emerald400) }
+                    trailingIcon = { Text("$curr  ", fontWeight = FontWeight.Bold, color = Emerald400) }
                 )
 
                 Spacer(modifier = Modifier.height(10.dp))
@@ -143,20 +246,20 @@ fun SettingsScreen(
                         hoursInput = it
                         saveMessage = null
                     },
-                    label = { Text("Wöchentliche Arbeitsstunden") },
+                    label = { Text(if (isDe) "Wöchentliche Arbeitsstunden" else "Weekly Working Hours") },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     modifier = Modifier
                         .fillMaxWidth()
                         .testTag("hours_input"),
                     shape = RoundedCornerShape(12.dp),
-                    trailingIcon = { Text("h/Woche  ", color = MaterialTheme.colorScheme.onSurfaceVariant) }
+                    trailingIcon = { Text("h  ", color = MaterialTheme.colorScheme.onSurfaceVariant) }
                 )
 
                 Spacer(modifier = Modifier.height(12.dp))
 
                 // Quick Salary Presets
                 Text(
-                    text = "Schnellauswahl nach Gehaltsstufe:",
+                    text = if (isDe) "Schnellauswahl nach Gehaltsstufe:" else "Quick salary presets:",
                     fontSize = 11.sp,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -166,10 +269,10 @@ fun SettingsScreen(
                     horizontalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
                     listOf(
-                        "2.500 €" to 2500.0,
-                        "3.800 €" to 3800.0,
-                        "5.000 €" to 5000.0,
-                        "7.200 €" to 7200.0
+                        "2.500" to 2500.0,
+                        "3.800" to 3800.0,
+                        "5.000" to 5000.0,
+                        "7.200" to 7200.0
                     ).forEach { (label, value) ->
                         Box(
                             modifier = Modifier
@@ -179,13 +282,13 @@ fun SettingsScreen(
                                 .clickable {
                                     grossInput = value.toInt().toString()
                                     viewModel.updateSalary(value, hoursInput.toDoubleOrNull() ?: 40.0)
-                                    saveMessage = "Gehalt auf $label aktualisiert!"
+                                    saveMessage = if (isDe) "Gehalt auf $label $curr aktualisiert!" else "Salary set to $label $curr!"
                                 }
                                 .padding(vertical = 6.dp),
                             contentAlignment = Alignment.Center
                         ) {
                             Text(
-                                text = label,
+                                text = "$label $curr",
                                 fontSize = 11.sp,
                                 fontWeight = FontWeight.Medium,
                                 color = Emerald400
@@ -202,7 +305,7 @@ fun SettingsScreen(
                         val gross = grossInput.toDoubleOrNull() ?: 3800.0
                         val hours = hoursInput.toDoubleOrNull() ?: 40.0
                         viewModel.updateSalary(gross, hours)
-                        saveMessage = "Daten erfolgreich gespeichert!"
+                        saveMessage = if (isDe) "Daten erfolgreich gespeichert!" else "Parameters updated successfully!"
                     },
                     modifier = Modifier
                         .fillMaxWidth()
@@ -213,7 +316,7 @@ fun SettingsScreen(
                 ) {
                     Icon(imageVector = Icons.Default.Calculate, contentDescription = null, modifier = Modifier.size(18.dp))
                     Spacer(modifier = Modifier.width(6.dp))
-                    Text("Berechnung aktualisieren", fontWeight = FontWeight.Bold)
+                    Text(if (isDe) "Berechnung aktualisieren" else "Update Calculation", fontWeight = FontWeight.Bold)
                 }
 
                 saveMessage?.let { msg ->
@@ -237,17 +340,30 @@ fun SettingsScreen(
         ) {
             Column(modifier = Modifier.padding(16.dp)) {
                 Text(
-                    text = "Vergütungs-Staffelung in Echtzeit",
+                    text = if (isDe) "Vergütungs-Staffelung in Echtzeit" else "Real-time Compensation Breakdown",
                     fontWeight = FontWeight.Bold,
                     fontSize = 14.sp,
                     color = MaterialTheme.colorScheme.onSurface
                 )
                 Spacer(modifier = Modifier.height(10.dp))
 
-                RateRow(label = "Monatliche Soll-Stunden:", value = "${String.format("%.1f", salaryConfig.monthlyHours)} Std.")
-                RateRow(label = "Stundensatz (brutto):", value = "€ ${String.format("%.2f", salaryConfig.hourlyRate)} / Std.")
-                RateRow(label = "Minutensatz:", value = "€ ${String.format("%.2f", salaryConfig.minuteRate)} / Min.")
-                RateRow(label = "Sekundentakt:", value = "€ ${String.format("%.4f", salaryConfig.secondRate)} / Sek.", isHighlight = true)
+                RateRow(
+                    label = if (isDe) "Monatliche Soll-Stunden:" else "Monthly Target Hours:",
+                    value = "${String.format("%.1f", salaryConfig.monthlyHours)} hrs"
+                )
+                RateRow(
+                    label = if (isDe) "Stundensatz (brutto):" else "Hourly Rate (gross):",
+                    value = "$curr ${String.format("%.2f", salaryConfig.hourlyRate)} / hr"
+                )
+                RateRow(
+                    label = if (isDe) "Minutensatz:" else "Minute Rate:",
+                    value = "$curr ${String.format("%.2f", salaryConfig.minuteRate)} / min"
+                )
+                RateRow(
+                    label = if (isDe) "Sekundentakt:" else "Second Rate:",
+                    value = "$curr ${String.format("%.4f", salaryConfig.secondRate)} / sec",
+                    isHighlight = true
+                )
 
                 Spacer(modifier = Modifier.height(10.dp))
 
@@ -258,7 +374,11 @@ fun SettingsScreen(
                         .padding(10.dp)
                 ) {
                     Text(
-                        text = "Formel: Monatsstunden ≈ Wochenstunden × 4.3333\nLohn/Sek = (Bruttogehalt / Monatsstunden) / 3600",
+                        text = if (isDe) {
+                            "Formel: Monatsstunden ≈ Wochenstunden × 4.3333\nLohn/Sek = (Bruttogehalt / Monatsstunden) / 3600"
+                        } else {
+                            "Formula: Monthly Hours ≈ Weekly Hours × 4.3333\nRate/Sec = (Gross Salary / Monthly Hours) / 3600"
+                        },
                         fontSize = 10.sp,
                         fontFamily = FontFamily.Monospace,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -276,7 +396,7 @@ fun SettingsScreen(
         ) {
             Column(modifier = Modifier.padding(16.dp)) {
                 Text(
-                    text = "App-Einstellungen",
+                    text = if (isDe) "App-Einstellungen" else "Preferences",
                     fontWeight = FontWeight.Bold,
                     fontSize = 14.sp,
                     color = MaterialTheme.colorScheme.onSurface
@@ -292,8 +412,17 @@ fun SettingsScreen(
                         Icon(imageVector = Icons.Default.Vibration, contentDescription = null, tint = Emerald400, modifier = Modifier.size(20.dp))
                         Spacer(modifier = Modifier.width(10.dp))
                         Column {
-                            Text(text = "Haptisches Feedback", fontSize = 13.sp, fontWeight = FontWeight.Medium, color = MaterialTheme.colorScheme.onSurface)
-                            Text(text = "Vibration bei Start/Stopp & Meilensteinen", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            Text(
+                                text = if (isDe) "Haptisches Feedback" else "Haptic Feedback",
+                                fontSize = 13.sp,
+                                fontWeight = FontWeight.Medium,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                            Text(
+                                text = if (isDe) "Vibration bei Start/Stopp & Meilensteinen" else "Tactile pulses on timer and milestone events",
+                                fontSize = 11.sp,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
                         }
                     }
 
@@ -315,13 +444,13 @@ fun SettingsScreen(
         ) {
             Column(modifier = Modifier.padding(16.dp)) {
                 Text(
-                    text = "Daten-Export & Archiv 📁",
+                    text = if (isDe) "Daten-Export & Archiv 📁" else "Data Export & CSV Archive 📁",
                     fontWeight = FontWeight.Bold,
                     fontSize = 14.sp,
                     color = MaterialTheme.colorScheme.onSurface
                 )
                 Text(
-                    text = "Exportiere deine Auszeiten als CSV-Tabelle für eigene Auswertungen.",
+                    text = if (isDe) "Exportiere deine Auszeiten als CSV-Tabelle für eigene Auswertungen." else "Export all recorded breaks as a standard CSV spreadsheet.",
                     fontSize = 11.sp,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -333,10 +462,10 @@ fun SettingsScreen(
                         val shareIntent = Intent().apply {
                             action = Intent.ACTION_SEND
                             putExtra(Intent.EXTRA_TEXT, csv)
-                            putExtra(Intent.EXTRA_SUBJECT, "RobinPay_Auszeiten_Export.csv")
+                            putExtra(Intent.EXTRA_SUBJECT, "RobinPay_Office_Breaks.csv")
                             type = "text/csv"
                         }
-                        context.startActivity(Intent.createChooser(shareIntent, "CSV exportieren"))
+                        context.startActivity(Intent.createChooser(shareIntent, "CSV export"))
                     },
                     modifier = Modifier
                         .fillMaxWidth()
@@ -347,7 +476,7 @@ fun SettingsScreen(
                 ) {
                     Icon(imageVector = Icons.Default.FileDownload, contentDescription = null, modifier = Modifier.size(18.dp))
                     Spacer(modifier = Modifier.width(6.dp))
-                    Text("Auszeiten als CSV exportieren", fontSize = 13.sp)
+                    Text(if (isDe) "Auszeiten als CSV exportieren" else "Export Breaks as CSV", fontSize = 13.sp)
                 }
             }
         }
@@ -372,14 +501,18 @@ fun SettingsScreen(
                 Spacer(modifier = Modifier.width(10.dp))
                 Column {
                     Text(
-                        text = "Satire- & Rechtshinweis",
+                        text = if (isDe) "Satire- & Store-Hinweis" else "Satire & Store Compliance Notice",
                         fontWeight = FontWeight.Bold,
                         fontSize = 12.sp,
                         color = MaterialTheme.colorScheme.onSurface
                     )
                     Spacer(modifier = Modifier.height(2.dp))
                     Text(
-                        text = "RobinPay ist ein humorvoller Pausen- & Meeting-Kosten-Rechner. Alle Berechnungen dienen Unterhaltungszwecken. Der Entwickler haftet nicht für plötzliche Beförderungen durch überlegene Kaffeepausen-Netzwerke.",
+                        text = if (isDe) {
+                            "RobinPay ist ein humorvoller Pausen- & Meeting-Kosten-Rechner. Alle Berechnungen dienen Unterhaltungszwecken. Der Entwickler haftet nicht für plötzliche Beförderungen durch überlegene Kaffeepausen-Netzwerke."
+                        } else {
+                            "RobinPay is a satirical office break and meeting cost calculator designed for entertainment and personal perspective. Calculations carry no legal warranty for performance reviews."
+                        },
                         fontSize = 11.sp,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         lineHeight = 15.sp
@@ -413,9 +546,9 @@ fun RateRow(label: String, value: String, isHighlight: Boolean = false) {
 }
 
 private fun generateCsvExport(sessions: List<SessionEntity>): String {
-    val df = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.GERMAN)
+    val df = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.US)
     val sb = StringBuilder()
-    sb.append("ID;Kategorie;Start;Ende;Dauer_Sekunden;Betrag_EUR;Stundensatz_EUR;Meeting;Teilnehmer;Konzern_Burn_EUR;Notizen\n")
+    sb.append("ID;Category;Start;End;Duration_Seconds;Earned_Amount;Hourly_Rate;IsMeeting;Participants;Burned_Amount;Notes\n")
     sessions.forEach { s ->
         val startStr = df.format(Date(s.startTimestamp))
         val endStr = df.format(Date(s.endTimestamp))

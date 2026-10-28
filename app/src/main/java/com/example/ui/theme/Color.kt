@@ -39,3 +39,4 @@ val CatSmoke  = Color(0xFF94A3B8) // Slate Gray
 val CatMeeting = Color(0xFFA855F7) // Corporate Purple
 val CatIT     = Color(0xFF06B6D4) // Tech Cyan
 val CatAdmin  = Color(0xFFEC4899) // Shopping Pink
+val CatSick   = Color(0xFF14B8A6) // Medical Teal / Sick Leave

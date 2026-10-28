@@ -2,8 +2,6 @@ package com.example.ui.screens
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -23,9 +21,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.DeleteSweep
-import androidx.compose.material.icons.filled.FilterList
 import androidx.compose.material.icons.filled.LocalFireDepartment
-import androidx.compose.material.icons.filled.PieChart
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -46,18 +42,17 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.RobinPayViewModel
+import com.example.data.SalaryConfig
 import com.example.data.SessionEntity
+import com.example.model.AppLanguage
 import com.example.model.BreakCategory
 import com.example.ui.theme.Emerald400
 import com.example.ui.theme.Rose500
@@ -74,8 +69,13 @@ fun HistoryScreen(
     viewModel: RobinPayViewModel,
     sessions: List<SessionEntity>,
     totalEarned: Double,
-    totalDurationSeconds: Long
+    totalDurationSeconds: Long,
+    salaryConfig: SalaryConfig
 ) {
+    val isDe = salaryConfig.language == AppLanguage.GERMAN
+    val curr = salaryConfig.currencySymbol
+    val lang = salaryConfig.language
+
     var selectedCategoryFilter by remember { mutableStateOf<String?>("all") }
     var sessionToDelete by remember { mutableStateOf<SessionEntity?>(null) }
     var showClearAllDialog by remember { mutableStateOf(false) }
@@ -107,13 +107,13 @@ fun HistoryScreen(
         ) {
             Column {
                 Text(
-                    text = "Auszeiten-Historie 📜",
+                    text = if (isDe) "Auszeiten-Historie 📜" else "Break History 📜",
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Black,
                     color = MaterialTheme.colorScheme.onBackground
                 )
                 Text(
-                    text = "${sessions.size} erfasste Dienstgänge",
+                    text = if (isDe) "${sessions.size} erfasste Dienstgänge" else "${sessions.size} recorded sessions",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -126,7 +126,7 @@ fun HistoryScreen(
                 ) {
                     Icon(
                         imageVector = Icons.Default.DeleteSweep,
-                        contentDescription = "Historie leeren",
+                        contentDescription = if (isDe) "Historie leeren" else "Clear History",
                         tint = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
@@ -148,13 +148,13 @@ fun HistoryScreen(
             ) {
                 Column(modifier = Modifier.padding(14.dp)) {
                     Text(
-                        text = "Gesamtbeute",
+                        text = if (isDe) "Gesamtbeute" else "Total Recuperated",
                         fontSize = 11.sp,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
-                        text = "€ ${String.format("%.2f", totalEarned)}",
+                        text = "$curr ${String.format("%.2f", totalEarned)}",
                         fontSize = 18.sp,
                         fontWeight = FontWeight.Black,
                         fontFamily = FontFamily.Monospace,
@@ -171,7 +171,7 @@ fun HistoryScreen(
             ) {
                 Column(modifier = Modifier.padding(14.dp)) {
                     Text(
-                        text = "Auszeit gesamt",
+                        text = if (isDe) "Auszeit gesamt" else "Total Break Time",
                         fontSize = 11.sp,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -187,10 +187,10 @@ fun HistoryScreen(
             }
         }
 
-        // Category Breakdown Canvas Chart (Donut Chart when there are sessions)
+        // Category Breakdown Canvas Chart
         if (sessions.isNotEmpty()) {
             Spacer(modifier = Modifier.height(14.dp))
-            CategoryBreakdownCard(sessions = sessions)
+            CategoryBreakdownCard(sessions = sessions, lang = lang)
         }
 
         Spacer(modifier = Modifier.height(14.dp))
@@ -204,7 +204,7 @@ fun HistoryScreen(
                 FilterChip(
                     selected = selectedCategoryFilter == "all",
                     onClick = { selectedCategoryFilter = "all" },
-                    label = { Text("Alle (${sessions.size})") },
+                    label = { Text(if (isDe) "Alle (${sessions.size})" else "All (${sessions.size})") },
                     colors = FilterChipDefaults.filterChipColors(
                         selectedContainerColor = Emerald400,
                         selectedLabelColor = Color.Black
@@ -216,7 +216,7 @@ fun HistoryScreen(
                 FilterChip(
                     selected = selectedCategoryFilter == category.id,
                     onClick = { selectedCategoryFilter = category.id },
-                    label = { Text("${category.emoji} ${category.title} ($count)") },
+                    label = { Text("${category.emoji} ${category.getTitle(lang)} ($count)") },
                     colors = FilterChipDefaults.filterChipColors(
                         selectedContainerColor = category.color.copy(alpha = 0.3f),
                         selectedLabelColor = category.color
@@ -239,12 +239,20 @@ fun HistoryScreen(
                     Text(text = "🛋️", fontSize = 48.sp)
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
-                        text = if (sessions.isEmpty()) "Noch keine Auszeiten verbucht!" else "Keine Einträge für diesen Filter.",
+                        text = if (sessions.isEmpty()) {
+                            if (isDe) "Noch keine Auszeiten verbucht!" else "No breaks recorded yet!"
+                        } else {
+                            if (isDe) "Keine Einträge für diesen Filter." else "No records for this category."
+                        },
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSurface
                     )
                     Text(
-                        text = if (sessions.isEmpty()) "Starte deinen ersten bezahlten Klogang im Tracker." else "Wähle einen anderen Filter aus.",
+                        text = if (sessions.isEmpty()) {
+                            if (isDe) "Starte deine erste bezahlte Pause im Tracker." else "Start your first paid break session in the Tracker."
+                        } else {
+                            if (isDe) "Wähle einen anderen Filter aus." else "Select another filter to view records."
+                        },
                         fontSize = 12.sp,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -262,6 +270,8 @@ fun HistoryScreen(
                     SessionItemCard(
                         session = session,
                         category = category,
+                        currencySymbol = curr,
+                        lang = lang,
                         onDelete = { sessionToDelete = session }
                     )
                 }
@@ -276,8 +286,16 @@ fun HistoryScreen(
     sessionToDelete?.let { session ->
         AlertDialog(
             onDismissRequest = { sessionToDelete = null },
-            title = { Text("Eintrag löschen?") },
-            text = { Text("Möchtest du diese Auszeit (€ ${String.format("%.2f", session.earnedAmount)}) unwiderruflich aus der Abrechnung entfernen?") },
+            title = { Text(if (isDe) "Eintrag löschen?" else "Delete Entry?") },
+            text = {
+                Text(
+                    if (isDe) {
+                        "Möchtest du diese Auszeit ($curr ${String.format("%.2f", session.earnedAmount)}) unwiderruflich aus der Abrechnung entfernen?"
+                    } else {
+                        "Permanently remove this break session ($curr ${String.format("%.2f", session.earnedAmount)}) from your history?"
+                    }
+                )
+            },
             confirmButton = {
                 Button(
                     onClick = {
@@ -286,12 +304,12 @@ fun HistoryScreen(
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = Rose500)
                 ) {
-                    Text("Löschen")
+                    Text(if (isDe) "Löschen" else "Delete")
                 }
             },
             dismissButton = {
                 TextButton(onClick = { sessionToDelete = null }) {
-                    Text("Abbrechen")
+                    Text(if (isDe) "Abbrechen" else "Cancel")
                 }
             }
         )
@@ -301,8 +319,16 @@ fun HistoryScreen(
     if (showClearAllDialog) {
         AlertDialog(
             onDismissRequest = { showClearAllDialog = false },
-            title = { Text("Gesamte Historie leeren?") },
-            text = { Text("Alle Auszeit-Einträge und Berechnungen werden gelöscht. Dein Rang wird auf Praktikant zurückgesetzt.") },
+            title = { Text(if (isDe) "Gesamte Historie leeren?" else "Clear Entire History?") },
+            text = {
+                Text(
+                    if (isDe) {
+                        "Alle Auszeit-Einträge und Berechnungen werden gelöscht. Dein Rang wird zurückgesetzt."
+                    } else {
+                        "All break entries will be deleted. Career progress will reset to Intern."
+                    }
+                )
+            },
             confirmButton = {
                 Button(
                     onClick = {
@@ -311,12 +337,12 @@ fun HistoryScreen(
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = Rose500)
                 ) {
-                    Text("Alles löschen")
+                    Text(if (isDe) "Alles löschen" else "Delete All")
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showClearAllDialog = false }) {
-                    Text("Abbrechen")
+                    Text(if (isDe) "Abbrechen" else "Cancel")
                 }
             }
         )
@@ -324,7 +350,7 @@ fun HistoryScreen(
 }
 
 @Composable
-fun CategoryBreakdownCard(sessions: List<SessionEntity>) {
+fun CategoryBreakdownCard(sessions: List<SessionEntity>, lang: AppLanguage) {
     val totalTime = sessions.sumOf { it.durationSeconds }.coerceAtLeast(1L)
     val categoryDurations = BreakCategory.entries.map { cat ->
         val duration = sessions.filter { it.categoryId == cat.id }.sumOf { it.durationSeconds }
@@ -378,7 +404,7 @@ fun CategoryBreakdownCard(sessions: List<SessionEntity>) {
                 verticalArrangement = Arrangement.spacedBy(4.dp)
             ) {
                 Text(
-                    text = "Auszeiten-Verteilung",
+                    text = if (lang == AppLanguage.GERMAN) "Auszeiten-Verteilung" else "Break Time Distribution",
                     fontSize = 12.sp,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurface
@@ -400,7 +426,7 @@ fun CategoryBreakdownCard(sessions: List<SessionEntity>) {
                             )
                             Spacer(modifier = Modifier.width(6.dp))
                             Text(
-                                text = "${cat.emoji} ${cat.title}",
+                                text = "${cat.emoji} ${cat.getTitle(lang)}",
                                 fontSize = 11.sp,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -422,10 +448,13 @@ fun CategoryBreakdownCard(sessions: List<SessionEntity>) {
 fun SessionItemCard(
     session: SessionEntity,
     category: BreakCategory,
+    currencySymbol: String,
+    lang: AppLanguage,
     onDelete: () -> Unit
 ) {
-    val dateFormatter = remember { SimpleDateFormat("dd. MMM, HH:mm", Locale.GERMAN) }
-    val formattedDate = remember(session.startTimestamp) {
+    val locale = if (lang == AppLanguage.GERMAN) Locale.GERMAN else Locale.US
+    val dateFormatter = remember(lang) { SimpleDateFormat("dd. MMM, HH:mm", locale) }
+    val formattedDate = remember(session.startTimestamp, lang) {
         dateFormatter.format(Date(session.startTimestamp))
     }
 
@@ -459,7 +488,7 @@ fun SessionItemCard(
 
                     Column {
                         Text(
-                            text = category.title,
+                            text = category.getTitle(lang),
                             fontWeight = FontWeight.Bold,
                             fontSize = 14.sp,
                             color = MaterialTheme.colorScheme.onSurface
@@ -475,7 +504,7 @@ fun SessionItemCard(
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Column(horizontalAlignment = Alignment.End) {
                         Text(
-                            text = "+ € ${String.format("%.2f", session.earnedAmount)}",
+                            text = "+ $currencySymbol ${String.format("%.2f", session.earnedAmount)}",
                             fontWeight = FontWeight.Black,
                             fontFamily = FontFamily.Monospace,
                             fontSize = 16.sp,
@@ -497,7 +526,7 @@ fun SessionItemCard(
                     ) {
                         Icon(
                             imageVector = Icons.Default.Delete,
-                            contentDescription = "Löschen",
+                            contentDescription = if (lang == AppLanguage.GERMAN) "Löschen" else "Delete",
                             tint = Slate700,
                             modifier = Modifier.size(16.dp)
                         )
@@ -523,7 +552,11 @@ fun SessionItemCard(
                     )
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(
-                        text = "Konzern-Burn: € ${String.format("%.2f", session.meetingBurnedAmount)} (${session.meetingParticipants} Teilnehmer)",
+                        text = if (lang == AppLanguage.GERMAN) {
+                            "Konzern-Burn: $currencySymbol ${String.format("%.2f", session.meetingBurnedAmount)} (${session.meetingParticipants} Teilnehmer)"
+                        } else {
+                            "Company Burn: $currencySymbol ${String.format("%.2f", session.meetingBurnedAmount)} (${session.meetingParticipants} attendees)"
+                        },
                         fontSize = 11.sp,
                         fontWeight = FontWeight.Medium,
                         color = Color(0xFFE9D5FF)

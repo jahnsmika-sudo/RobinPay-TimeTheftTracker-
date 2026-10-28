@@ -2,69 +2,102 @@ package com.example.model
 
 data class LootEquivalent(
     val id: String,
-    val name: String,
+    val nameEn: String,
+    val nameDe: String,
     val emoji: String,
     val cost: Double,
-    val unitLabel: String,
-    val funDescription: String
+    val unitLabelEn: String,
+    val unitLabelDe: String,
+    val funDescriptionEn: String,
+    val funDescriptionDe: String
 ) {
+    fun getName(lang: AppLanguage): String = if (lang == AppLanguage.GERMAN) nameDe else nameEn
+    fun getUnitLabel(lang: AppLanguage): String = if (lang == AppLanguage.GERMAN) unitLabelDe else unitLabelEn
+    fun getFunDescription(lang: AppLanguage): String = if (lang == AppLanguage.GERMAN) funDescriptionDe else funDescriptionEn
+
+    // Backward compatibility
+    val name: String get() = nameEn
+    val unitLabel: String get() = unitLabelEn
+    val funDescription: String get() = funDescriptionEn
+
     companion object {
         val ALL_LOOT = listOf(
             LootEquivalent(
                 id = "coffee",
-                name = "Barista Kaffee",
+                nameEn = "Barista Latte",
+                nameDe = "Barista Kaffee",
                 emoji = "☕",
                 cost = 4.50,
-                unitLabel = "Tassen",
-                funDescription = "Feinster Hafermilch-Flat-White vom Hipster-Café"
+                unitLabelEn = "Cups",
+                unitLabelDe = "Tassen",
+                funDescriptionEn = "Silky oat flat white from the local hipster café",
+                funDescriptionDe = "Feinster Hafermilch-Flat-White vom Hipster-Café"
             ),
             LootEquivalent(
                 id = "doner",
-                name = "Döner Kebab",
+                nameEn = "Street Food Kebab",
+                nameDe = "Döner Kebab",
                 emoji = "🥙",
                 cost = 8.00,
-                unitLabel = "Döner",
-                funDescription = "Knuspriges Fladenbrot mit Kräuter-Knoblauch-Soße"
+                unitLabelEn = "Kebabs",
+                unitLabelDe = "Döner",
+                funDescriptionEn = "Warm crispy flatbread with extra garlic sauce",
+                funDescriptionDe = "Knuspriges Fladenbrot mit Kräuter-Knoblauch-Soße"
             ),
             LootEquivalent(
                 id = "pizza",
-                name = "Pizza Lieferdienst",
+                nameEn = "Takeout Pizza",
+                nameDe = "Pizza Lieferdienst",
                 emoji = "🍕",
                 cost = 15.00,
-                unitLabel = "Pizzen",
-                funDescription = "Große Steinofen-Pizza für die Mittagspause"
+                unitLabelEn = "Pizzas",
+                unitLabelDe = "Pizzen",
+                funDescriptionEn = "Large stone-baked pizza delivered straight to your door",
+                funDescriptionDe = "Große Steinofen-Pizza für die Mittagspause"
             ),
             LootEquivalent(
                 id = "beer",
-                name = "Kasten Bier",
+                nameEn = "Case of Craft Beer",
+                nameDe = "Kasten Bier",
                 emoji = "🍺",
                 cost = 20.00,
-                unitLabel = "Kästen",
-                funDescription = "Flüssiges Feierabend-Gold für das ganze Team"
+                unitLabelEn = "Cases",
+                unitLabelDe = "Kästen",
+                funDescriptionEn = "Liquid gold for after-work team celebrations",
+                funDescriptionDe = "Flüssiges Feierabend-Gold für das ganze Team"
             ),
             LootEquivalent(
                 id = "gas",
-                name = "Tankfüllung",
+                nameEn = "Full Tank of Gas",
+                nameDe = "Tankfüllung",
                 emoji = "⛽",
                 cost = 90.00,
-                unitLabel = "Füllungen",
-                funDescription = "Voller Tank für den Wochenend-Trip"
+                unitLabelEn = "Tanks",
+                unitLabelDe = "Füllungen",
+                funDescriptionEn = "Full tank for a spontaneous weekend road trip",
+                funDescriptionDe = "Voller Tank für den Wochenend-Trip"
             ),
             LootEquivalent(
                 id = "ps5",
-                name = "PlayStation 5",
+                nameEn = "PlayStation 5 Console",
+                nameDe = "PlayStation 5",
                 emoji = "🎮",
                 cost = 550.00,
-                unitLabel = "Konsolen",
-                funDescription = "Next-Gen Konsole für echte Gaming-Sessions"
+                unitLabelEn = "Consoles",
+                unitLabelDe = "Konsolen",
+                funDescriptionEn = "Next-gen gaming machine for peak weekend unwinding",
+                funDescriptionDe = "Next-Gen Konsole für echte Gaming-Sessions"
             ),
             LootEquivalent(
                 id = "rent",
-                name = "1 Monatsmiete",
+                nameEn = "1 Month Apartment Rent",
+                nameDe = "1 Monatsmiete",
                 emoji = "🏠",
                 cost = 950.00,
-                unitLabel = "Mieten",
-                funDescription = "Warmmiete für die heimische Ruheoase"
+                unitLabelEn = "Months",
+                unitLabelDe = "Mieten",
+                funDescriptionEn = "Warm rent for your personal home sanctuary",
+                funDescriptionDe = "Warmmiete für die heimische Ruheoase"
             )
         )
 

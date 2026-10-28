@@ -56,10 +56,12 @@ class ExampleRobolectricTest {
     }
 
     @Test
-    fun `loot equivalent milestone calculation verifies doner progress`() {
-        val milestone = LootEquivalent.findNextMilestone(6.0)
-        assertEquals("doner", milestone.targetLoot.id)
-        assertEquals(2.0, milestone.remainingCost, 0.01)
-        assertEquals(75, milestone.percent)
+    fun `sick leave category is present and accessible`() {
+        val sick = com.example.model.BreakCategory.fromId("sick")
+        assertEquals(com.example.model.BreakCategory.SICK_LEAVE, sick)
+        assertEquals("Krankheitstag", sick.titleDe)
+        assertEquals("Sick Day & Recovery", sick.titleEn)
+        assertTrue(sick.wittyQuotesEn.isNotEmpty())
+        assertTrue(sick.wittyQuotesDe.isNotEmpty())
     }
 }

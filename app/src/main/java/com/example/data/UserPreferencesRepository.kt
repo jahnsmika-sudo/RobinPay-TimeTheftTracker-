@@ -2,6 +2,7 @@ package com.example.data
 
 import android.content.Context
 import android.content.SharedPreferences
+import com.example.model.AppLanguage
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -10,7 +11,9 @@ data class SalaryConfig(
     val monthlyGrossSalary: Double = 3800.0,
     val weeklyHours: Double = 40.0,
     val hapticsEnabled: Boolean = true,
-    val soundEnabled: Boolean = true
+    val soundEnabled: Boolean = true,
+    val language: AppLanguage = AppLanguage.ENGLISH,
+    val currencySymbol: String = "€"
 ) {
     val monthlyHours: Double get() = (weeklyHours * 4.3333).coerceAtLeast(1.0)
     val hourlyRate: Double get() = monthlyGrossSalary / monthlyHours
@@ -29,11 +32,15 @@ class UserPreferencesRepository(context: Context) {
         val hours = prefs.getFloat("weekly_hours", 40f).toDouble()
         val haptics = prefs.getBoolean("haptics_enabled", true)
         val sound = prefs.getBoolean("sound_enabled", true)
+        val langCode = prefs.getString("app_language", "en") ?: "en"
+        val currency = prefs.getString("currency_symbol", "€") ?: "€"
         return SalaryConfig(
             monthlyGrossSalary = gross,
             weeklyHours = hours,
             hapticsEnabled = haptics,
-            soundEnabled = sound
+            soundEnabled = sound,
+            language = AppLanguage.fromCode(langCode),
+            currencySymbol = currency
         )
     }
 
@@ -46,6 +53,16 @@ class UserPreferencesRepository(context: Context) {
             monthlyGrossSalary = gross,
             weeklyHours = weeklyHours
         )
+    }
+
+    fun setLanguage(language: AppLanguage) {
+        prefs.edit().putString("app_language", language.code).apply()
+        _salaryConfig.value = _salaryConfig.value.copy(language = language)
+    }
+
+    fun setCurrency(symbol: String) {
+        prefs.edit().putString("currency_symbol", symbol).apply()
+        _salaryConfig.value = _salaryConfig.value.copy(currencySymbol = symbol)
     }
 
     fun toggleHaptics(enabled: Boolean) {

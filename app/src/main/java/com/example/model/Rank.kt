@@ -1,53 +1,80 @@
 package com.example.model
 
 enum class Rank(
-    val title: String,
+    val titleEn: String,
+    val titleDe: String,
     val emoji: String,
     val minEarnings: Double,
     val maxEarnings: Double,
-    val description: String,
-    val quote: String
+    val descriptionEn: String,
+    val descriptionDe: String,
+    val quoteEn: String,
+    val quoteDe: String
 ) {
     INTERN(
-        title = "Praktikant auf Abwegen",
+        titleEn = "Sneaky Intern",
+        titleDe = "Praktikant auf Abwegen",
         emoji = "🐣",
         minEarnings = 0.0,
         maxEarnings = 15.0,
-        description = "Erste zaghafte Klogänge. Jeder Cent zählt auf dem Weg zur finanziellen Emanzipation.",
-        quote = "Aller Anfang ist schwer, aber bezahlt."
+        descriptionEn = "Timid early bio breaks. Every single cent counts toward economic freedom.",
+        descriptionDe = "Erste zaghafte Klogänge. Jeder Cent zählt auf dem Weg zur finanziellen Emanzipation.",
+        quoteEn = "Small steps, fully compensated.",
+        quoteDe = "Aller Anfang ist schwer, aber bezahlt."
     ),
     COFFEE_SPEC(
-        title = "Flurfunk-Spezialist",
+        titleEn = "Watercooler Strategist",
+        titleDe = "Flurfunk-Spezialist",
         emoji = "☕",
         minEarnings = 15.0,
         maxEarnings = 60.0,
-        description = "Kennt jeden Büro-Klatsch noch vor dem Betriebsrat. Der Kaffeekonsum finanziert sich von selbst.",
-        quote = "Networking auf Vorstands-Niveau."
+        descriptionEn = "Knows office gossip days before HR does. The coffee machine pays for itself.",
+        descriptionDe = "Kennt jeden Büro-Klatsch noch vor dem Betriebsrat. Der Kaffeekonsum finanziert sich von selbst.",
+        quoteEn = "Executive-level hallway diplomacy.",
+        quoteDe = "Networking auf Vorstands-Niveau."
     ),
     QUIET_QUITTER(
-        title = "Quiet-Quitting-Manager",
+        titleEn = "Quiet Quitting Manager",
+        titleDe = "Quiet-Quitting-Manager",
         emoji = "🥷",
         minEarnings = 60.0,
         maxEarnings = 200.0,
-        description = "Meisterhaftes Nicken mit stummgeschaltetem Mikrofon. Unsichtbar anwesend, maximal vergütet.",
-        quote = "Minimaler Einsatz, maximales Charisma."
+        descriptionEn = "Master of nodding gently with the mic on mute. Inconspicuously present, maximally rewarded.",
+        descriptionDe = "Meisterhaftes Nicken mit stummgeschaltetem Mikrofon. Unsichtbar anwesend, maximal vergütet.",
+        quoteEn = "Minimal friction, maximum charisma.",
+        quoteDe = "Minimaler Einsatz, maximales Charisma."
     ),
     GHOST(
-        title = "Konzern-Phantom",
+        titleEn = "Corporate Ghost",
+        titleDe = "Konzern-Phantom",
         emoji = "👻",
         minEarnings = 200.0,
         maxEarnings = 600.0,
-        description = "Im Kalender durchgehend geblockt. Legendär, aber selten an seinem Schreibtisch gesichtet.",
-        quote = "Wer suchet, der findet mich nicht."
+        descriptionEn = "Calendar perpetually blocked with 'Focus Time'. Legendary, yet rarely spotted at their desk.",
+        descriptionDe = "Im Kalender durchgehend geblockt. Legendär, aber selten an seinem Schreibtisch gesichtet.",
+        quoteEn = "Whoever seeks me shall not find me.",
+        quoteDe = "Wer suchet, der findet mich nicht."
     ),
     ROBIN_HOOD(
-        title = "Robin Hood der Wirtschaft",
+        titleEn = "Robin Hood of Capitalism",
+        titleDe = "Robin Hood der Wirtschaft",
         emoji = "👑",
         minEarnings = 600.0,
         maxEarnings = 999999.0,
-        description = "Der unangefochtene Champion. Holt sich zurück, was der Belegschaft zusteht.",
-        quote = "Nimmt den Konzernen, gibt dem eigenen Bankkonto."
+        descriptionEn = "The undisputed legend. Takes back what rightfully belongs to the workforce.",
+        descriptionDe = "Der unangefochtene Champion. Holt sich zurück, was der Belegschaft zusteht.",
+        quoteEn = "Extracts from corporations, deposits into own savings.",
+        quoteDe = "Nimmt den Konzernen, gibt dem eigenen Bankkonto."
     );
+
+    fun getTitle(lang: AppLanguage): String = if (lang == AppLanguage.GERMAN) titleDe else titleEn
+    fun getDescription(lang: AppLanguage): String = if (lang == AppLanguage.GERMAN) descriptionDe else descriptionEn
+    fun getQuote(lang: AppLanguage): String = if (lang == AppLanguage.GERMAN) quoteDe else quoteEn
+
+    // Backward compatibility getters
+    val title: String get() = titleEn
+    val description: String get() = descriptionDe
+    val quote: String get() = quoteEn
 
     companion object {
         fun getRankFor(earnings: Double): RankProgress {

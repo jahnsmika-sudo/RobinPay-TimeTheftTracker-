@@ -96,10 +96,10 @@ fun RobinPayApp(viewModel: RobinPayViewModel = viewModel()) {
                         icon = {
                             Icon(
                                 imageVector = if (currentTab == AppTab.TRACKER) Icons.Filled.HourglassTop else Icons.Outlined.HourglassTop,
-                                contentDescription = "Tracker"
+                                contentDescription = AppTab.TRACKER.getTitle(salaryConfig.language)
                             )
                         },
-                        label = { Text("Tracker", fontSize = 11.sp) },
+                        label = { Text(AppTab.TRACKER.getTitle(salaryConfig.language), fontSize = 11.sp) },
                         colors = NavigationBarItemDefaults.colors(
                             selectedIconColor = Slate950,
                             selectedTextColor = Emerald400,
@@ -110,17 +110,17 @@ fun RobinPayApp(viewModel: RobinPayViewModel = viewModel()) {
                         modifier = Modifier.testTag("nav_tracker")
                     )
 
-                    // Tab 2: Historie
+                    // Tab 2: Historie / History
                     NavigationBarItem(
                         selected = currentTab == AppTab.HISTORY,
                         onClick = { viewModel.selectTab(AppTab.HISTORY) },
                         icon = {
                             Icon(
                                 imageVector = if (currentTab == AppTab.HISTORY) Icons.Filled.History else Icons.Outlined.History,
-                                contentDescription = "Historie"
+                                contentDescription = AppTab.HISTORY.getTitle(salaryConfig.language)
                             )
                         },
-                        label = { Text("Historie", fontSize = 11.sp) },
+                        label = { Text(AppTab.HISTORY.getTitle(salaryConfig.language), fontSize = 11.sp) },
                         colors = NavigationBarItemDefaults.colors(
                             selectedIconColor = Slate950,
                             selectedTextColor = Emerald400,
@@ -131,17 +131,17 @@ fun RobinPayApp(viewModel: RobinPayViewModel = viewModel()) {
                         modifier = Modifier.testTag("nav_history")
                     )
 
-                    // Tab 3: Beute & Ränge
+                    // Tab 3: Beute & Ränge / Ranks
                     NavigationBarItem(
                         selected = currentTab == AppTab.LOOT_RANKS,
                         onClick = { viewModel.selectTab(AppTab.LOOT_RANKS) },
                         icon = {
                             Icon(
                                 imageVector = if (currentTab == AppTab.LOOT_RANKS) Icons.Filled.EmojiEvents else Icons.Outlined.EmojiEvents,
-                                contentDescription = "Beute & Ränge"
+                                contentDescription = AppTab.LOOT_RANKS.getTitle(salaryConfig.language)
                             )
                         },
-                        label = { Text("Ränge", fontSize = 11.sp) },
+                        label = { Text(AppTab.LOOT_RANKS.getTitle(salaryConfig.language), fontSize = 11.sp) },
                         colors = NavigationBarItemDefaults.colors(
                             selectedIconColor = Slate950,
                             selectedTextColor = Emerald400,
@@ -152,17 +152,17 @@ fun RobinPayApp(viewModel: RobinPayViewModel = viewModel()) {
                         modifier = Modifier.testTag("nav_ranks")
                     )
 
-                    // Tab 4: Einstellungen / Rechner
+                    // Tab 4: Einstellungen / Settings
                     NavigationBarItem(
                         selected = currentTab == AppTab.SETTINGS,
                         onClick = { viewModel.selectTab(AppTab.SETTINGS) },
                         icon = {
                             Icon(
                                 imageVector = if (currentTab == AppTab.SETTINGS) Icons.Filled.Calculate else Icons.Outlined.Calculate,
-                                contentDescription = "Gehalt & Info"
+                                contentDescription = AppTab.SETTINGS.getTitle(salaryConfig.language)
                             )
                         },
-                        label = { Text("Rechner", fontSize = 11.sp) },
+                        label = { Text(AppTab.SETTINGS.getTitle(salaryConfig.language), fontSize = 11.sp) },
                         colors = NavigationBarItemDefaults.colors(
                             selectedIconColor = Slate950,
                             selectedTextColor = Emerald400,
@@ -196,14 +196,16 @@ fun RobinPayApp(viewModel: RobinPayViewModel = viewModel()) {
                             viewModel = viewModel,
                             sessions = sessions,
                             totalEarned = combinedEarned,
-                            totalDurationSeconds = totalDurationSecs + activeSession.elapsedSeconds
+                            totalDurationSeconds = totalDurationSecs + activeSession.elapsedSeconds,
+                            salaryConfig = salaryConfig
                         )
                     }
                     AppTab.LOOT_RANKS -> {
                         RanksScreen(
                             viewModel = viewModel,
                             rankProgress = rankProgress,
-                            totalEarned = combinedEarned
+                            totalEarned = combinedEarned,
+                            salaryConfig = salaryConfig
                         )
                     }
                     AppTab.SETTINGS -> {

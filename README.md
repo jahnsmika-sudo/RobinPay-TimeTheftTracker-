@@ -17,6 +17,7 @@ RobinPay berechnet und visualisiert in Echtzeit (auf die Sekunde und den Cent ge
   - 🥱 **Sinnlos-Meeting**: Konzern-Koma & Geldverbrenner
   - ⏳ **IT-Streik & Updates**: Windows updatet... (37%)
   - 🛍️ **Life-Admin & Shopping**: Private Marktrecherche & Paketstatus
+  - 🤒 **Krankheitstag**: Lohnfortzahlung & Gelber Schein (§ 3 EntgFG) mit Sofort-Tagesbuchung (8h)
 - **Sinnlos-Meeting-Geldverbrenner 🔥**: Teilnehmer-Multiplikator berechnet das gesamte kollektiv verbrannte Konzernkapital live.
 - **Stealth-Modus / Boss-Key (🚨 CHEF KOMMT!)**: Täuschend echtes Microsoft-Excel-Spreadsheet (Q3 CAPEX/OPEX Financial Forecast), das mit einem Klick das Display tarnt.
 - **Karriereleiter & Gamification**:

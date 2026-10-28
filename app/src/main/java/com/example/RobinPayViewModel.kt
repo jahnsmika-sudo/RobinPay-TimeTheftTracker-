@@ -28,18 +28,24 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
-enum class AppTab(val title: String, val iconName: String) {
-    TRACKER("Tracker", "timer"),
-    HISTORY("Historie", "history"),
-    LOOT_RANKS("Beute & Ränge", "trophy"),
-    SETTINGS("Gehaltsrechner", "settings")
+import com.example.model.AppLanguage
+
+enum class AppTab(val titleEn: String, val titleDe: String, val iconName: String) {
+    TRACKER("Tracker", "Tracker", "timer"),
+    HISTORY("History", "Historie", "history"),
+    LOOT_RANKS("Ranks", "Ränge", "trophy"),
+    SETTINGS("Settings", "Rechner", "settings");
+
+    fun getTitle(lang: AppLanguage): String = if (lang == AppLanguage.GERMAN) titleDe else titleEn
 }
 
 data class ActiveSessionState(
     val isTracking: Boolean = false,
     val isPaused: Boolean = false,
-    val category: BreakCategory = BreakCategory.TOILET,
+    val category: BreakCategory = BreakCategory.RESTROOM,
     val elapsedSeconds: Long = 0L,
+    val accumulatedMillis: Long = 0L,
+    val lastResumeTime: Long = 0L,
     val earnedAmount: Double = 0.0,
     val meetingParticipants: Int = 6,
     val meetingBurnedAmount: Double = 0.0,
@@ -106,14 +112,16 @@ class RobinPayViewModel(application: Application) : AndroidViewModel(application
 
     fun startTracking() {
         triggerHaptic(HapticType.START)
-        val startTime = System.currentTimeMillis()
+        val now = System.currentTimeMillis()
         _activeSession.value = _activeSession.value.copy(
             isTracking = true,
             isPaused = false,
             elapsedSeconds = 0L,
+            accumulatedMillis = 0L,
+            lastResumeTime = now,
             earnedAmount = 0.0,
             meetingBurnedAmount = 0.0,
-            sessionStartTime = startTime,
+            sessionStartTime = now,
             quoteIndex = (0 until _activeSession.value.category.wittyQuotes.size).random()
         )
         startTicker()
@@ -121,13 +129,24 @@ class RobinPayViewModel(application: Application) : AndroidViewModel(application
 
     fun pauseTracking() {
         triggerHaptic(HapticType.CLICK)
-        _activeSession.value = _activeSession.value.copy(isPaused = true)
+        val now = System.currentTimeMillis()
+        val current = _activeSession.value
+        val additionalMillis = if (current.lastResumeTime > 0) now - current.lastResumeTime else 0L
+        _activeSession.value = current.copy(
+            isPaused = true,
+            accumulatedMillis = current.accumulatedMillis + additionalMillis,
+            lastResumeTime = 0L
+        )
         tickerJob?.cancel()
     }
 
     fun resumeTracking() {
         triggerHaptic(HapticType.CLICK)
-        _activeSession.value = _activeSession.value.copy(isPaused = false)
+        val now = System.currentTimeMillis()
+        _activeSession.value = _activeSession.value.copy(
+            isPaused = false,
+            lastResumeTime = now
+        )
         startTicker()
     }
 
@@ -135,26 +154,51 @@ class RobinPayViewModel(application: Application) : AndroidViewModel(application
         tickerJob?.cancel()
         tickerJob = viewModelScope.launch {
             while (_activeSession.value.isTracking && !_activeSession.value.isPaused) {
-                delay(200) // smooth 5 updates per second for animated decimals
-                val cfg = salaryConfig.value
-                val newElapsed = _activeSession.value.elapsedSeconds + 1
-                // Add fraction (200ms = 0.2s)
-                val totalSecondsDouble = (_activeSession.value.elapsedSeconds) + 0.2
-                val newSeconds = totalSecondsDouble.toLong()
+                delay(100) // 10 updates per second for super smooth sub-cent ticker
+                val now = System.currentTimeMillis()
+                val current = _activeSession.value
+                val currentChunk = if (current.lastResumeTime > 0) now - current.lastResumeTime else 0L
+                val totalMillis = current.accumulatedMillis + currentChunk
+                val totalSeconds = totalMillis / 1000L
+                val exactSecondsDouble = totalMillis / 1000.0
 
-                val earned = totalSecondsDouble * cfg.secondRate
-                val burned = if (_activeSession.value.category.isMeetingBurner) {
-                    earned * _activeSession.value.meetingParticipants
+                val cfg = salaryConfig.value
+                val earned = exactSecondsDouble * cfg.secondRate
+                val burned = if (current.category.isMeetingBurner) {
+                    earned * current.meetingParticipants
                 } else {
                     0.0
                 }
 
-                _activeSession.value = _activeSession.value.copy(
-                    elapsedSeconds = newSeconds,
+                _activeSession.value = current.copy(
+                    elapsedSeconds = totalSeconds,
                     earnedAmount = earned,
                     meetingBurnedAmount = burned
                 )
             }
+        }
+    }
+
+    fun bookFullSickDay(hours: Double = 8.0, notes: String = "Gelber Schein (Attest)") {
+        triggerHaptic(HapticType.SUCCESS)
+        val now = System.currentTimeMillis()
+        val durationSecs = (hours * 3600.0).toLong()
+        val earned = hours * salaryConfig.value.hourlyRate
+
+        viewModelScope.launch {
+            val entity = SessionEntity(
+                categoryId = BreakCategory.SICK_LEAVE.id,
+                startTimestamp = now - (durationSecs * 1000L),
+                endTimestamp = now,
+                durationSeconds = durationSecs,
+                earnedAmount = earned,
+                hourlySalaryRate = salaryConfig.value.hourlyRate,
+                isMeeting = false,
+                meetingParticipants = 1,
+                meetingBurnedAmount = 0.0,
+                notes = notes
+            )
+            sessionRepository.insertSession(entity)
         }
     }
 
@@ -267,8 +311,18 @@ class RobinPayViewModel(application: Application) : AndroidViewModel(application
         }
     }
 
+    fun setLanguage(language: AppLanguage) {
+        prefsRepository.setLanguage(language)
+    }
+
+    fun setCurrency(symbol: String) {
+        prefsRepository.setCurrency(symbol)
+    }
+
     fun generateShareableReceiptText(): String {
         val totalEarned = getCombinedEarnings()
+        val lang = salaryConfig.value.language
+        val curr = salaryConfig.value.currencySymbol
         val rank = getRankProgress().currentRank
         val totalSecs = totalDurationSeconds.value + _activeSession.value.elapsedSeconds
         val hours = totalSecs / 3600
@@ -276,20 +330,38 @@ class RobinPayViewModel(application: Application) : AndroidViewModel(application
         val donerCount = String.format("%.1f", totalEarned / 8.0)
         val coffeeCount = String.format("%.1f", totalEarned / 4.5)
 
-        return """
-            🧾 ROBINPAY • OFFIZIELLER ZEITAUSGLEICHS-BELEG
-            ------------------------------------------------
-            Mitarbeiter-Status: ${rank.title} ${rank.emoji}
-            Erbeutetes Auszeit-Gehalt: € ${String.format("%.2f", totalEarned)}
-            Verbrachte Inoffizielle Pause: ${hours}h ${mins}m
-            
-            Naturalien-Äquivalente:
-            🥙 Döner Kebab: $donerCount Portionen
-            ☕ Barista Flat White: $coffeeCount Tassen
-            
-            "${rank.quote}"
-            
-            Getrackt mit RobinPay – Der diskrete Büro-Pausen- & Meeting-Kosten-Rechner.
-        """.trimIndent()
+        return if (lang == AppLanguage.GERMAN) {
+            """
+                🧾 ROBINPAY • OFFIZIELLER ZEITAUSGLEICHS-BELEG
+                ------------------------------------------------
+                Mitarbeiter-Status: ${rank.getTitle(lang)} ${rank.emoji}
+                Erbeutetes Auszeit-Gehalt: $curr ${String.format("%.2f", totalEarned)}
+                Verbrachte Inoffizielle Pause: ${hours}h ${mins}m
+                
+                Naturalien-Äquivalente:
+                🥙 Döner Kebab: $donerCount Portionen
+                ☕ Barista Flat White: $coffeeCount Tassen
+                
+                "${rank.getQuote(lang)}"
+                
+                Getrackt mit RobinPay – Der diskrete Büro-Pausen- & Meeting-Kosten-Rechner.
+            """.trimIndent()
+        } else {
+            """
+                🧾 ROBINPAY • OFFICIAL TIME-OFF RECUPERATION RECEIPT
+                ----------------------------------------------------
+                Employee Status: ${rank.getTitle(lang)} ${rank.emoji}
+                Recuperated Break Earnings: $curr ${String.format("%.2f", totalEarned)}
+                Time Spent on Inofficial Break: ${hours}h ${mins}m
+                
+                Loot Milestones Earned:
+                🥙 Street Food Kebabs: $donerCount units
+                ☕ Barista Lattes: $coffeeCount cups
+                
+                "${rank.getQuote(lang)}"
+                
+                Tracked with RobinPay – The Discrete Office Break & Meeting Cost Calculator.
+            """.trimIndent()
+        }
     }
 }

@@ -50,6 +50,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.RobinPayViewModel
+import com.example.data.SalaryConfig
+import com.example.model.AppLanguage
 import com.example.model.LootEquivalent
 import com.example.model.Rank
 import com.example.model.RankProgress
@@ -59,15 +61,19 @@ import com.example.ui.theme.Slate700
 import com.example.ui.theme.Slate800
 import com.example.ui.theme.Slate850
 import com.example.ui.theme.Slate900
-import com.example.ui.theme.Slate950
 
 @Composable
 fun RanksScreen(
     viewModel: RobinPayViewModel,
     rankProgress: RankProgress,
-    totalEarned: Double
+    totalEarned: Double,
+    salaryConfig: SalaryConfig
 ) {
     val context = LocalContext.current
+    val isDe = salaryConfig.language == AppLanguage.GERMAN
+    val curr = salaryConfig.currencySymbol
+    val lang = salaryConfig.language
+
     var showReceiptDialog by remember { mutableStateOf(false) }
 
     LazyColumn(
@@ -88,13 +94,13 @@ fun RanksScreen(
             ) {
                 Column {
                     Text(
-                        text = "Beute & Karriere-Ränge 🏆",
+                        text = if (isDe) "Beute & Karriere-Ränge 🏆" else "Loot & Career Ranks 🏆",
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Black,
                         color = MaterialTheme.colorScheme.onBackground
                     )
                     Text(
-                        text = "Vom Praktikanten zum Robin Hood der Wirtschaft",
+                        text = if (isDe) "Vom Praktikanten zum Robin Hood der Wirtschaft" else "From Sneaky Intern to Robin Hood of Capitalism",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -131,13 +137,13 @@ fun RanksScreen(
                     Spacer(modifier = Modifier.height(12.dp))
 
                     Text(
-                        text = "Aktueller Rang:",
+                        text = if (isDe) "Aktueller Rang:" else "Current Rank:",
                         fontSize = 11.sp,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
 
                     Text(
-                        text = rankProgress.currentRank.title,
+                        text = rankProgress.currentRank.getTitle(lang),
                         fontSize = 20.sp,
                         fontWeight = FontWeight.Black,
                         color = Amber400
@@ -146,7 +152,7 @@ fun RanksScreen(
                     Spacer(modifier = Modifier.height(4.dp))
 
                     Text(
-                        text = "\"${rankProgress.currentRank.quote}\"",
+                        text = "\"${rankProgress.currentRank.getQuote(lang)}\"",
                         fontSize = 12.sp,
                         fontStyle = androidx.compose.ui.text.font.FontStyle.Italic,
                         color = MaterialTheme.colorScheme.onSurface,
@@ -162,7 +168,11 @@ fun RanksScreen(
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
                             Text(
-                                text = "Nächster Rang: ${rankProgress.nextRank.emoji} ${rankProgress.nextRank.title}",
+                                text = if (isDe) {
+                                    "Nächster Rang: ${rankProgress.nextRank.emoji} ${rankProgress.nextRank.getTitle(lang)}"
+                                } else {
+                                    "Next Rank: ${rankProgress.nextRank.emoji} ${rankProgress.nextRank.getTitle(lang)}"
+                                },
                                 fontSize = 11.sp,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -189,13 +199,17 @@ fun RanksScreen(
                         Spacer(modifier = Modifier.height(6.dp))
 
                         Text(
-                            text = "Noch € ${String.format("%.2f", rankProgress.remainingAmount)} bis zum Aufstieg",
+                            text = if (isDe) {
+                                "Noch $curr ${String.format("%.2f", rankProgress.remainingAmount)} bis zum Aufstieg"
+                            } else {
+                                "Only $curr ${String.format("%.2f", rankProgress.remainingAmount)} left to level up"
+                            },
                             fontSize = 11.sp,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     } else {
                         Text(
-                            text = "👑 Maximaler Rang erreicht! Du bist eine Konzern-Legende.",
+                            text = if (isDe) "👑 Maximaler Rang erreicht! Du bist eine Legende." else "👑 Maximum rank achieved! You are a workplace legend.",
                             fontSize = 12.sp,
                             fontWeight = FontWeight.Bold,
                             color = Emerald400
@@ -213,7 +227,7 @@ fun RanksScreen(
                     .fillMaxWidth()
                     .height(52.dp)
                     .testTag("slacking_wrapped_button"),
-                colors = ButtonDefaults.buttonColors(containerColor = Emerald400, contentColor = Slate950),
+                colors = ButtonDefaults.buttonColors(containerColor = Emerald400, contentColor = Color.Black),
                 shape = RoundedCornerShape(16.dp)
             ) {
                 Icon(
@@ -223,23 +237,27 @@ fun RanksScreen(
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
-                    text = "Abrechnungs-Beleg generieren & teilen",
+                    text = if (isDe) "Abrechnungs-Beleg generieren & teilen" else "Generate & Share Slacking Receipt",
                     fontWeight = FontWeight.Bold,
                     fontSize = 14.sp
                 )
             }
         }
 
-        // Section: Sachwert-Äquivalente (Real-Value Loot)
+        // Section: Real-Value Loot
         item {
             Text(
-                text = "Erarbeitete Naturalien (Sachwerte) 🌯🍺",
+                text = if (isDe) "Erarbeitete Naturalien (Sachwerte) 🌯☕" else "Office Loot Equivalents 🌯☕",
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onBackground
             )
             Text(
-                text = "Was du durch bezahlte Pausen bisher im echten Leben refinanziert hast:",
+                text = if (isDe) {
+                    "Was du durch bezahlte Pausen bisher im echten Leben refinanziert hast:"
+                } else {
+                    "Real-world milestones unlocked by recuperating corporate time:"
+                },
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -274,13 +292,13 @@ fun RanksScreen(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text(
-                                text = loot.name,
+                                text = loot.getName(lang),
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 14.sp,
                                 color = MaterialTheme.colorScheme.onSurface
                             )
                             Text(
-                                text = "€ ${String.format("%.2f", loot.cost)}",
+                                text = "$curr ${String.format("%.2f", loot.cost)}",
                                 fontSize = 12.sp,
                                 fontFamily = FontFamily.Monospace,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -288,7 +306,7 @@ fun RanksScreen(
                         }
 
                         Text(
-                            text = loot.funDescription,
+                            text = loot.getFunDescription(lang),
                             fontSize = 11.sp,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -296,7 +314,11 @@ fun RanksScreen(
                         Spacer(modifier = Modifier.height(4.dp))
 
                         Text(
-                            text = "${String.format("%.1f", countEarned)} ${loot.unitLabel} freigeschaltet",
+                            text = if (isDe) {
+                                "${String.format("%.1f", countEarned)} ${loot.getUnitLabel(lang)} freigeschaltet"
+                            } else {
+                                "${String.format("%.1f", countEarned)} ${loot.getUnitLabel(lang)} unlocked"
+                            },
                             fontSize = 12.sp,
                             fontWeight = FontWeight.Bold,
                             color = if (isUnlocked) Emerald400 else Amber400
@@ -310,7 +332,7 @@ fun RanksScreen(
         item {
             Spacer(modifier = Modifier.height(8.dp))
             Text(
-                text = "Die Karriereleiter 🧗",
+                text = if (isDe) "Die Karriereleiter 🧗" else "The Career Ladder 🧗",
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onBackground
@@ -342,7 +364,7 @@ fun RanksScreen(
                     Column(modifier = Modifier.weight(1f)) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Text(
-                                text = rank.title,
+                                text = rank.getTitle(lang),
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 14.sp,
                                 color = if (isCurrent) Amber400 else MaterialTheme.colorScheme.onSurface
@@ -355,7 +377,7 @@ fun RanksScreen(
                                         .padding(horizontal = 6.dp, vertical = 2.dp)
                                 ) {
                                     Text(
-                                        text = "AKTUELL",
+                                        text = if (isDe) "AKTUELL" else "CURRENT",
                                         fontSize = 9.sp,
                                         fontWeight = FontWeight.Bold,
                                         color = Amber400
@@ -365,13 +387,17 @@ fun RanksScreen(
                         }
 
                         Text(
-                            text = rank.description,
+                            text = rank.getDescription(lang),
                             fontSize = 11.sp,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
 
                         Text(
-                            text = "Ab € ${String.format("%.0f", rank.minEarnings)} Auszeit-Verdienst",
+                            text = if (isDe) {
+                                "Ab $curr ${String.format("%.0f", rank.minEarnings)} Auszeit-Verdienst"
+                            } else {
+                                "Unlocked at $curr ${String.format("%.0f", rank.minEarnings)} break earnings"
+                            },
                             fontSize = 10.sp,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -400,7 +426,7 @@ fun RanksScreen(
             onDismissRequest = { showReceiptDialog = false },
             title = {
                 Text(
-                    text = "🧾 Offizieller Ausgleichs-Beleg",
+                    text = if (isDe) "🧾 Offizieller Ausgleichs-Beleg" else "🧾 Official Recuperation Receipt",
                     fontWeight = FontWeight.Bold
                 )
             },
@@ -430,19 +456,19 @@ fun RanksScreen(
                             putExtra(Intent.EXTRA_TEXT, receiptText)
                             type = "text/plain"
                         }
-                        context.startActivity(Intent.createChooser(shareIntent, "RobinPay Abrechnung teilen"))
+                        context.startActivity(Intent.createChooser(shareIntent, if (isDe) "Abrechnung teilen" else "Share Receipt"))
                         showReceiptDialog = false
                     },
-                    colors = ButtonDefaults.buttonColors(containerColor = Emerald400, contentColor = Slate950)
+                    colors = ButtonDefaults.buttonColors(containerColor = Emerald400, contentColor = Color.Black)
                 ) {
                     Icon(imageVector = Icons.Default.Share, contentDescription = null, modifier = Modifier.size(16.dp))
                     Spacer(modifier = Modifier.width(6.dp))
-                    Text("Teilen")
+                    Text(if (isDe) "Teilen" else "Share")
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showReceiptDialog = false }) {
-                    Text("Schließen")
+                    Text(if (isDe) "Schließen" else "Close")
                 }
             }
         )

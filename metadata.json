@@ -1,0 +1,6 @@
+{
+  "name": "RobinPay",
+  "description": "Satirischer Pausen- & Leerlauf-Tracker für Angestellte mit Live-Gehaltsrechner, Boss-Key und Meeting-Kosten.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
